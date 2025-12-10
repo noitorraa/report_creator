@@ -2,6 +2,10 @@ import csv
 import argparse
 from tabulate import tabulate
 
+# Константы для адаптивности
+POSITION_COL = 1
+PERFORMANCE_COL = 3
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Утилита для создания отчетов")
@@ -15,7 +19,7 @@ def parse_arguments():
     parser.add_argument(
         "--report",
         dest="report_name",
-        nargs=1,
+        type=str,
         required=True,
         help="Аргумент, принимающий название для итогового отчета",
     )
@@ -36,9 +40,13 @@ def read_csv_files(file_paths):
     return all_data
 
 
-def calculate_position_stats(data, position_col=1, performance_col=3):
+def calculate_position_stats(
+    data, position_col=POSITION_COL, performance_col=PERFORMANCE_COL
+):
     position_stats = {}
     for row in data:
+        if not row:
+            continue
         try:
             position = row[position_col]
             performance = float(row[performance_col])
@@ -55,6 +63,8 @@ def calculate_position_stats(data, position_col=1, performance_col=3):
 
 
 def sort_stats_by_performance(position_stats):
+    if not position_stats:
+        return []
     return sorted(
         position_stats.items(),
         key=lambda x: x[1]["total"] / x[1]["count"],
@@ -87,10 +97,8 @@ def main():
     position_stats = calculate_position_stats(all_data)
     sorted_stats = sort_stats_by_performance(position_stats)
     table_data = prepare_table_data(sorted_stats)
-    report_name = args.report_name[0] if args.report_name else None
-    print_report(table_data, report_name)
+    print_report(table_data, args.report_name)
 
 
 if __name__ == "__main__":
     main()
-
